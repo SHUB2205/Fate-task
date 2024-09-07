@@ -7,77 +7,46 @@ void main() {
   runApp(ProviderScope(child: RestaurantApp()));
 }
 
+// The main widget of the app, defining the MaterialApp with the home screen
 class RestaurantApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Restaurant App',
-      home: RestaurantListScreen(),
+      title: 'Restaurant App',  // Title of the app
+      home: RestaurantListScreen(),  // Initial screen to show restaurant list
     );
   }
 }
 
+// The screen that lists all the restaurants
+// This is a ConsumerWidget which listens to changes from providers using Riverpod
 class RestaurantListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Reading the restaurant data from the provider
     final restaurantData = ref.watch(restaurantProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Restaurants'),
+        title: Text('Restaurant List'),  // AppBar title
       ),
       body: restaurantData.when(
-        data: (restaurants) => RestaurantList(restaurants: restaurants),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        data: (restaurants) => ListView.builder(
+          // Builds a list of restaurants using ListView
+          itemCount: restaurants.length,
+          itemBuilder: (context, index) {
+            final restaurant = restaurants[index];
+            return ListTile(
+              title: Text(restaurant.name),  // Displays the name of each restaurant
+              subtitle: Text(restaurant.cuisine),  // Displays the cuisine type
+            );
+          },
+        ),
+        // Display loading spinner while the data is being fetched
+        loading: () => Center(child: CircularProgressIndicator()),
+        // Display an error message if something goes wrong
         error: (error, stack) => Center(child: Text('Error: $error')),
       ),
-    );
-  }
-}
-
-class RestaurantList extends StatefulWidget {
-  final List<Restaurant> restaurants;
-  
-  RestaurantList({required this.restaurants});
-
-  @override
-  _RestaurantListState createState() => _RestaurantListState();
-}
-
-class _RestaurantListState extends State<RestaurantList> {
-  String searchQuery = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredRestaurants = widget.restaurants
-        .where((restaurant) => restaurant.name.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: const InputDecoration(labelText: 'Search'),
-            onChanged: (query) {
-              setState(() {
-                searchQuery = query;
-              });
-            },
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: filteredRestaurants.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(filteredRestaurants[index].name),
-                subtitle: Text(filteredRestaurants[index].cuisine),
-              );
-            },
-          ),
-        ),
-      ],
     );
   }
 }
